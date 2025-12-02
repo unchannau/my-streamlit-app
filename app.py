@@ -53,10 +53,10 @@ def is_japanese(text):
 # Streamlit UI
 # -------------------------------
 
-multi = ''' *Want to learn Japanese through the songs you love ?*  
-just paste your favorite lyrics, and we'll magically pull out all the useful vocabulary for you !
+multi = ''' ***Want to learn Japanese through the songs you love ?***  
+Just paste your favorite lyrics, and we'll gently gather all the useful words for you !
 
-you'll get **furigana**, **translations**, **jlpt levels** and **example sentences** -- all in one place\u2003🔖'''
+You'll get **furigana**, **translations**, **jlpt levels** and **example sentences** -- all in one place\u2003🔖'''
 
 st.markdown(multi)
 
@@ -70,17 +70,17 @@ if st.button("Process", disabled=not model):
         st.error("Please enter a valid API Key before use.")
         st.stop()
 
-    if not lyrics or len(lyrics.strip()) < 10:
-        st.error("❌ Please enter lyrics of sufficient length.")
+    if not lyrics or len(lyrics.strip()) < num_words * 5:
+        st.error("❌\u2003Please enter lyrics of sufficient length.")
         st.stop()
 
     if not is_japanese(lyrics):
-        st.error("❌ Please enter Japanese lyrics only.")
+        st.error("❌\u2003Please enter Japanese lyrics only.")
         st.stop()
 
     st.success("☁️\u2003Lyrics checked successfully")
     display_lyrics = lyrics.replace("\n", " / ")
-    st.info(f"Lyrics used : **{display_lyrics}**")
+    # st.info(f"Lyrics used : **{display_lyrics}**")
 
     # -------------------------------
     # Prompt for Gemini (JSON only, max 500 chars)
