@@ -1,0 +1,14 @@
+# Requirements for the Streamlit app using Gemini API
+# Streamlit App
+streamlit
+# Gemini API client
+google-genai
+# Environment variables (for .env file)
+python-dotenv
+# Data manipulation (for creating and styling the vocabulary table)
+pandas
+
+# streamlit run test.py
+# streamlit run app.py
+
+# conda activate grmini

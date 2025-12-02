@@ -1,0 +1,9 @@
+[theme]
+base="light"
+backgroundColor="white"
+primaryColor="darkseagreen"
+secondaryBackgroundColor="lavenderblush"
+
+[theme.sidebar]
+backgroundColor="lavenderblush"
+secondaryBackgroundColor="white"
