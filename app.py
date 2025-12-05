@@ -11,7 +11,7 @@ from time import sleep
 # -------------------------------------------------
 # 1) Streamlit Setup
 # -------------------------------------------------
-st.set_page_config(page_title="JP Vocab Extractor", layout="centered")
+st.set_page_config(page_title="UtaVocab", layout="centered")
 
 with st.sidebar:
     st.header(":love_letter: Gemini API Key Setup", divider="red")
@@ -119,7 +119,7 @@ def parse_json_safely(text: str) -> dict:
 # -------------------------------------------------
 # 4) UI Intro
 # -------------------------------------------------
-st.subheader(":play_or_pause_button: Vocabulary Extractor from Japanese song")
+st.subheader(":play_or_pause_button: Vocabulary Extractor for Japanese songs")
 st.markdown('''
 ***Want to learn Japanese through the songs you love ?***  
 Just paste your favorite lyrics, and we'll gently gather all the useful words for you !
