@@ -3,11 +3,9 @@
 # Streamlit App
 streamlit
 # Gemini API client
-google-generativeai=0.7.0
+google-generativeai==0.7.0
 # Environment variables (for .env file)
 python-dotenv
 # Data manipulation (for creating and styling the vocabulary table)
 pandas
 
-# conda activate gemini
-# streamlit run app.py
