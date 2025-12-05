@@ -14,7 +14,7 @@ from time import sleep
 st.set_page_config(page_title="JP Vocab Extractor", layout="centered")
 
 with st.sidebar:
-    st.header("💌\u2003Gemini API Key Setup", divider="red")
+    st.header("💌 Gemini API Key Setup", divider="red")
     api_key_input = st.text_input("Gemini API Key (required)", type="password")
     st.caption("This data will not be saved.")
 
@@ -113,13 +113,13 @@ def parse_json_safely(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
-        st.error(f"❌\u2003Invalid JSON returned by AI: {e}")
+        st.error(f"❌ Invalid JSON returned by AI: {e}")
         return {}
 
 # -------------------------------------------------
 # 4) UI Intro
 # -------------------------------------------------
-st.subheader("⏯\u2003Vocabulary Extractor from Japanese song")
+st.subheader("⏯ Vocabulary Extractor from Japanese song")
 st.markdown('''
 ***Want to learn Japanese through the songs you love ?***  
 Just paste your favorite lyrics, and we'll gently gather all the useful words for you !
@@ -129,10 +129,10 @@ You'll get **furigana**, **translations**, **JLPT levels**, and **example senten
 
 col1, col2 = st.columns([1,2], gap="medium")
 with col1:
-    st.subheader("💬\u2003Vocab Count")
+    st.subheader("💬 Vocab Count")
     num_words = st.number_input("Number of words to extract:", min_value=1, max_value=20, value=10, step=1)
 with col2:
-    st.subheader("🎵\u2003Japanese Lyrics")
+    st.subheader("🎵 Japanese Lyrics")
     lyrics = st.text_area("Japanese lyrics:", height=200, placeholder="ここに歌詞を貼り付けてください...")
 
 # Prevent double-click processing
@@ -149,13 +149,13 @@ if st.button("Process", disabled=not model or is_busy()):
         st.error("Please enter a valid API Key before use.")
         st.stop()
     if not lyrics or len(lyrics.strip()) < num_words * 4:
-        st.error("❌\u2003Please enter lyrics of sufficient length.")
+        st.error("❌ Please enter lyrics of sufficient length.")
         st.stop()
     if not is_japanese(lyrics):
-        st.error("❌\u2003Please enter Japanese lyrics only.")
+        st.error("❌ Please enter Japanese lyrics only.")
         st.stop()
 
-    st.success("☁️\u2003Lyrics checked successfully")
+    st.success("☁️ Lyrics checked successfully")
     set_busy(True)
 
     # Build prompt
@@ -181,7 +181,7 @@ if st.button("Process", disabled=not model or is_busy()):
     # -------------------------------------------------
     # 6) Vocabulary Tabs
     # -------------------------------------------------
-    st.subheader("📕\u2003Japanese Vocabulary Extracted")
+    st.subheader("📕 Japanese Vocabulary Extracted")
     tabs = st.tabs(["DataFrame View", "Card View"])
 
     # Tab 1: DataFrame
@@ -213,7 +213,7 @@ if st.button("Process", disabled=not model or is_busy()):
     df_csv = pd.DataFrame(vocab_list)
     csv = df_csv.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="💾\u2003Download CSV",
+        label="💾 Download CSV",
         data=csv,
         file_name="japanese_vocab.csv",
         mime="text/csv"
