@@ -182,7 +182,7 @@ if st.button("Process", disabled=not model or is_busy()):
     # 6) Vocabulary Tabs
     # -------------------------------------------------
     st.subheader(":closed_book: Japanese Vocabulary Extracted")
-    tabs = st.tabs(["DataFrame View", "Card View"])
+    tabs = st.tabs(["DataFrame View", "Card View", "Practice View"])
 
     # Tab 1: DataFrame
     with tabs[0]:
@@ -208,6 +208,27 @@ if st.button("Process", disabled=not model or is_busy()):
                 <b>Example:</b> {item['example']}
             </div>
             """, unsafe_allow_html=True)
+    
+    # Tab 3: Blind Test
+    with tabs[2]:
+        for idx, item in enumerate(vocab_list):
+
+            jlpt_color = color_map.get(item["jlpt"])
+
+            # Header ของ expander มีเส้นสีบาง ๆ แสดง JLPT
+            st.markdown(f"""
+                <div style="border-left: 4px solid {jlpt_color}; padding-left:8px; margin: 4px 0;">
+                    <span style="font-size:17px; font-weight:600;">{item['word']}</span>
+                    <span style="font-size:13px; opacity:0.7;"> ({item['jlpt']})</span>
+                </div>
+            """, unsafe_allow_html=True)
+
+            with st.expander("Answer"):
+                st.markdown(f"""
+                **Furigana:** {item['furigana']}  
+                **Meaning:** {item['translation']}  
+                **Example:** {item['example']}
+                """)
 
     # Download CSV
     df_csv = pd.DataFrame(vocab_list)
