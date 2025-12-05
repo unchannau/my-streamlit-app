@@ -11,7 +11,7 @@ from time import sleep
 # -------------------------------------------------
 # 1) Streamlit Setup
 # -------------------------------------------------
-st.set_page_config(page_title="Japanese Vocab Extractor", layout="centered")
+st.set_page_config(page_title="JP Vocab Extractor", layout="centered")
 
 with st.sidebar:
     st.header("💌\u2003Gemini API Key Setup", divider="red")
