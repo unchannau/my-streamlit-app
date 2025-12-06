@@ -223,7 +223,7 @@ if st.button("Process", disabled=not model or is_busy()):
                 </div>
             """, unsafe_allow_html=True)
 
-            with st.expander("Answer"):
+            with st.expander("Reveal"):
                 st.markdown(f"""
                 **Furigana:** {item['furigana']}  
                 **Meaning:** {item['translation']}  
