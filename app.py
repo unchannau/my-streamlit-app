@@ -8,10 +8,10 @@ import google.generativeai as genai
 from google.api_core.exceptions import GoogleAPIError
 from time import sleep
 
-# -------------------------------------------------
+# -----------------------------------------------
 # 1) Streamlit Setup
-# -------------------------------------------------
-st.set_page_config(page_title="UtaVocab", layout="centered")
+# -----------------------------------------------
+st.set_page_config(page_title="UtaVocab2", layout="centered")
 
 with st.sidebar:
     st.header(":love_letter: Gemini API Key Setup", divider="red")
@@ -21,33 +21,38 @@ with st.sidebar:
 # Optional logo
 try:
     st.image("images/image.png", width="content")
-except Exception:
+except:
     pass
 
 load_dotenv()
 
-# -------------------------------------------------
-# 2) Load API Key
-# -------------------------------------------------
-API_KEY = api_key_input or os.getenv("GEMINI_API_KEY")
-MODEL_NAME = "gemini-2.0-flash"
-model = None
+# -----------------------------------------------
+# No cache — model must load from each user's key
+# -----------------------------------------------
+def load_model_direct(api_key: str):
+    """Load Gemini model fresh from user's API key."""
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel("gemini-2.5-flash")
 
+
+API_KEY = api_key_input or os.getenv("GEMINI_API_KEY")
+
+model = None
 if API_KEY:
     try:
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel(MODEL_NAME)
+        model = load_model_direct(API_KEY)
     except Exception as e:
-        st.error(f"Gemini configuration failed: {e}")
+        st.error(f"Failed to initialize Gemini model: {e}")
 else:
     st.warning("Please enter the API Key in the sidebar.")
 
-# -------------------------------------------------
+# -----------------------------------------------
 # 3) Helper Functions
-# -------------------------------------------------
+# -----------------------------------------------
 def is_japanese(text: str) -> bool:
     jp_chars = re.findall(r"[ぁ-ゔァ-ヴー々〆〤一-龥]", text)
     return len(jp_chars) >= 15
+
 
 def build_prompt(lyrics: str, num_words: int) -> str:
     return f"""
@@ -61,27 +66,27 @@ Requirements:
 - English translation must be accurate
 - JLPT level must be N5–N1
 - Example sentence must be natural and relevant.
-- Example sentence must follow this EXACT one-line pattern (no newlines allowed):
+- Example sentence must follow this EXACT pattern:
 
-Example pattern (strict):
 "<Japanese sentence> (<Romaji>) - <English sentence>"
 
 Correct JSON format:
 {{
-    "vocab": [
-        {{
-            "word": "...",
-            "furigana": "...",
-            "translation": "...",
-            "jlpt": "...",
-            "example": "..."
-        }}
-    ]
+  "vocab": [
+    {{
+      "word": "...",
+      "furigana": "...",
+      "translation": "...",
+      "jlpt": "...",
+      "example": "..."
+    }}
+  ]
 }}
 
-Lyrics (first 500 chars only):
+Lyrics (first 500 chars):
 {lyrics[:500]}
 """
+
 
 def clean_gemini_output(text: str) -> str:
     text = text.strip()
@@ -91,34 +96,36 @@ def clean_gemini_output(text: str) -> str:
         text = text[3:-3].strip()
     return text
 
-def call_gemini(prompt: str, model, retries: int = 3) -> str:
-    for attempt in range(retries):
-        try:
-            response = model.generate_content(prompt)
-            return response.text
-        except GoogleAPIError as e:
-            if attempt < retries - 1:
-                wait = 2 ** (attempt + 1)
-                st.warning(f"Gemini Error: {e}. Retrying in {wait} seconds...")
-                sleep(wait)
-            else:
-                st.error(f"API Error: {e}")
-                st.stop()
-        except Exception as e:
-            st.error(f"Unexpected Error: {e}")
+
+def call_gemini(prompt: str, model):
+    """Call Gemini ONE TIME. If 429 → stop immediately."""
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+
+    except GoogleAPIError as e:
+        if "429" in str(e):
+            st.error("❌ You exceeded your quota. Please wait or use another API key.")
             st.stop()
-    return ""
+        else:
+            st.error(f"API Error: {e}")
+            st.stop()
+
+    except Exception as e:
+        st.error(f"Unexpected Error: {e}")
+        st.stop()
+
 
 def parse_json_safely(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
-        st.error(f":x: Invalid JSON returned by AI: {e}")
+        st.error(f"❌ AI returned invalid JSON: {e}")
         return {}
 
-# -------------------------------------------------
+# -----------------------------------------------
 # 4) UI Intro
-# -------------------------------------------------
+# -----------------------------------------------
 st.subheader(":play_or_pause_button: Vocabulary Extractor for Japanese songs")
 st.markdown('''
 ***Want to learn Japanese through the songs you love ?***  
@@ -135,64 +142,52 @@ with col2:
     st.subheader(":musical_note: Japanese Lyrics")
     lyrics = st.text_area("Japanese lyrics:", height=200, placeholder="ここに歌詞を貼り付けてください...")
 
-# Prevent double-click processing
-if "busy" not in st.session_state:
-    st.session_state["busy"] = False
-def is_busy(): return st.session_state.get("busy", False)
-def set_busy(x): st.session_state["busy"] = x
-
-# -------------------------------------------------
-# 5) Main Process Button
-# -------------------------------------------------
-if st.button("Process", disabled=not model or is_busy()):
+# -----------------------------------------------
+# 5) Process Button
+# -----------------------------------------------
+if st.button("Process", disabled=not model):
     if not API_KEY:
         st.error("Please enter a valid API Key before use.")
         st.stop()
+
     if not lyrics or len(lyrics.strip()) < num_words * 4:
-        st.error(":x: Please enter lyrics of sufficient length.")
+        st.error("❌ Please enter lyrics of sufficient length.")
         st.stop()
+
     if not is_japanese(lyrics):
-        st.error(":x: Please enter Japanese lyrics only.")
+        st.error("❌ Please enter Japanese lyrics only.")
         st.stop()
 
-    st.success(":cloud: Lyrics checked successfully")
-    set_busy(True)
-
-    # Build prompt
+    st.success("✔ Lyrics validated")
     prompt = build_prompt(lyrics, num_words)
 
-    # Gemini Call
-    with st.spinner(f"Processing with Gemini ({MODEL_NAME})..."):
+    with st.spinner(f"Processing with Gemini 2.5 Flash..."):
         raw_output = call_gemini(prompt, model)
 
     cleaned = clean_gemini_output(raw_output)
     data = parse_json_safely(cleaned)
     vocab_list = data.get("vocab", [])
 
-    # Debug info
-    # with st.expander("Check process"):
-        # st.text_area("Gemini Raw Output", cleaned, height=200)
-
     if not vocab_list:
         st.error("No vocabulary returned.")
-        set_busy(False)
         st.stop()
 
-    # -------------------------------------------------
+    # -------------------------------------------
     # 6) Vocabulary Tabs
-    # -------------------------------------------------
+    # -------------------------------------------
     st.subheader(":closed_book: Japanese Vocabulary Extracted")
     tabs = st.tabs(["DataFrame View", "Card View", "Practice View"])
+
+    color_map = {'N5': '#F3F0FF','N4': '#F0FFFA','N3': '#FDFFF0','N2': '#FFFAF0','N1': '#FFF0F5'}
 
     # Tab 1: DataFrame
     with tabs[0]:
         df = pd.DataFrame(vocab_list)
         df.index = range(1, len(df) + 1)
-        color_map = {'N5': '#F3F0FF','N4': '#F0FFFA','N3': '#FDFFF0','N2': '#FFFAF0','N1': '#FFF0F5'}
         def color_jlpt(val):
             return f"background-color: {color_map.get(val, 'white')}"
-        styled_df = df.style.map(color_jlpt, subset=['jlpt'])
-        st.dataframe(styled_df, width='stretch', height=450)
+        styled = df.style.map(color_jlpt, subset=['jlpt'])
+        st.dataframe(styled, width='stretch', height=450)
 
     # Tab 2: Card View
     with tabs[1]:
@@ -208,21 +203,17 @@ if st.button("Process", disabled=not model or is_busy()):
                 <b>Example:</b> {item['example']}
             </div>
             """, unsafe_allow_html=True)
-    
-    # Tab 3: Blind Test
+
+    # Tab 3: Practice View
     with tabs[2]:
-        for idx, item in enumerate(vocab_list):
-
+        for item in vocab_list:
             jlpt_color = color_map.get(item["jlpt"])
-
-            # Header ของ expander มีเส้นสีบาง ๆ แสดง JLPT
             st.markdown(f"""
                 <div style="border-left: 4px solid {jlpt_color}; padding-left:8px; margin: 4px 0;">
                     <span style="font-size:17px; font-weight:600;">{item['word']}</span>
                     <span style="font-size:13px; opacity:0.7;"> ({item['jlpt']})</span>
                 </div>
             """, unsafe_allow_html=True)
-
             with st.expander("Reveal"):
                 st.markdown(f"""
                 **Furigana:** {item['furigana']}  
@@ -230,17 +221,14 @@ if st.button("Process", disabled=not model or is_busy()):
                 **Example:** {item['example']}
                 """)
 
-    # Download CSV
+    # Export CSV
     df_csv = pd.DataFrame(vocab_list)
-    csv = df_csv.to_csv(index=False).encode("utf-8")
     st.download_button(
         label=":floppy_disk: Download CSV",
-        data=csv,
+        data=df_csv.to_csv(index=False).encode("utf-8"),
         file_name="japanese_vocab.csv",
         mime="text/csv"
     )
-
-    set_busy(False)
 
 # Footer
 st.markdown("---")
