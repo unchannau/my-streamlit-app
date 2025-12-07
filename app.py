@@ -105,7 +105,7 @@ def call_gemini(prompt: str, model):
 
     except GoogleAPIError as e:
         if "429" in str(e):
-            st.error("❌ You exceeded your quota. Please wait or use another API key.")
+            st.error(":x: You exceeded your quota. Please wait or use another API key.")
             st.stop()
         else:
             st.error(f"API Error: {e}")
@@ -120,7 +120,7 @@ def parse_json_safely(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
-        st.error(f"❌ AI returned invalid JSON: {e}")
+        st.error(f":x: AI returned invalid JSON: {e}")
         return {}
 
 # -----------------------------------------------
@@ -151,14 +151,14 @@ if st.button("Process", disabled=not model):
         st.stop()
 
     if not lyrics or len(lyrics.strip()) < num_words * 4:
-        st.error("❌ Please enter lyrics of sufficient length.")
+        st.error(":x: Please enter lyrics of sufficient length.")
         st.stop()
 
     if not is_japanese(lyrics):
-        st.error("❌ Please enter Japanese lyrics only.")
+        st.error(":x: Please enter Japanese lyrics only.")
         st.stop()
 
-    st.success("✔ Lyrics validated")
+    st.success(":cloud: Lyrics validated")
     prompt = build_prompt(lyrics, num_words)
 
     with st.spinner(f"Processing with Gemini 2.5 Flash..."):
